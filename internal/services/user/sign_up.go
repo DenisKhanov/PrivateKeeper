@@ -7,7 +7,6 @@ import (
 	"github.com/DenisKhanov/PrivateKeeper/pkg/auth"
 	"github.com/DenisKhanov/PrivateKeeper/pkg/validate"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/sirupsen/logrus"
 )
 
@@ -71,36 +70,4 @@ func (u *ServiceUser) SignUp(ctx context.Context, user models.User) (token strin
 		return "", usererrors.ErrSaveNewUser
 	}
 	return token, nil
-}
-
-// withTransaction creates and manages a database transaction.
-// If txFunc completes successfully, the transaction is committed.
-// If txFunc returns an error or a panic occurs, the transaction is rolled back.
-//
-// Parameters:
-// - ctx: The context for the transaction.
-// - txFunc: A function that takes a transaction (pgx.Tx) as an argument.
-//
-// Returns:
-// - An error if any issues occurred during the transaction or within txFunc.
-func (u *ServiceUser) withTransaction(ctx context.Context, txFunc func(pgx.Tx) error) error {
-	tx, err := u.dbPool.Begin(ctx)
-	if err != nil {
-		logrus.Error("Error starting transaction: ", err)
-		return err
-	}
-	// transaction management using closure
-	defer func() {
-		if p := recover(); p != nil {
-			tx.Rollback(ctx)
-			panic(p)
-		} else if err != nil {
-			tx.Rollback(ctx)
-		} else {
-			err = tx.Commit(ctx)
-		}
-	}()
-
-	err = txFunc(tx)
-	return err
 }

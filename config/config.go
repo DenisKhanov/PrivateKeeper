@@ -148,7 +148,7 @@ func getValueOrDefault(value, defaultValue string) string {
 
 // PrintProjectInfo print info (version,date,commit) about build.
 func PrintProjectInfo() {
-	fmt.Printf("Build version: %s\n", getValueOrDefault(buildVersion, "2.0"))
-	fmt.Printf("Build date: %s\n", getValueOrDefault(buildDate, "13.04.2024"))
-	fmt.Printf("Build commit: %s\n", getValueOrDefault(buildCommit, "Clean architect"))
+	fmt.Printf("Build version: %s\n", getValueOrDefault(buildVersion, "1.0"))
+	fmt.Printf("Build date: %s\n", getValueOrDefault(buildDate, "05.05.2024"))
+	fmt.Printf("Build commit: %s\n", getValueOrDefault(buildCommit, "Developer edition"))
 }

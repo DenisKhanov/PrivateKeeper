@@ -10,12 +10,14 @@ type User struct {
 }
 
 type LoginData struct {
+	DataType string `json:"data_type"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
 	Info     string `json:"info"`
 }
 
 type CardData struct {
+	DataType   string `json:"data_type"`
 	CVV        string `json:"cvv"`
 	Number     string `json:"number"`
 	ExpDate    string `json:"exp_date"`
@@ -24,14 +26,22 @@ type CardData struct {
 }
 
 type TextData struct {
-	Content string `json:"Content"`
-	Info    string `json:"info"`
+	DataType string `json:"data_type"`
+	Content  string `json:"Content"`
+	Info     string `json:"info"`
 }
 
 type BinaryData struct {
+	DataType   string `json:"data_type"`
 	ObjectName string `json:"name"`
 	Content    []byte `json:"Content"`
 	Info       string `json:"info"`
+}
+
+type Metadata struct {
+	ID          int
+	DataType    string
+	Description string
 }
 
 // CTXKey is the type used as a context key for storing user ID.

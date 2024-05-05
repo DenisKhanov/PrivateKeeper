@@ -44,13 +44,17 @@ func (d *ServiceData) AddTextData(ctx context.Context, userID uuid.UUID, data mo
 }
 
 func (d *ServiceData) AddBinaryData(ctx context.Context, userID uuid.UUID, data models.BinaryData) error {
-	s3URL, err := d.s3Repository.AddBinaryData(ctx, data.ObjectName, data.Content)
-	if err != nil {
+	if err := d.s3Repository.AddBinaryData(ctx, data.ObjectName, data.Content); err != nil {
 		return err
 	}
-
-	if err = d.withTransaction(ctx, func(tx pgx.Tx) error {
-		if err = d.repository.AddBinaryData(ctx, tx, userID, data.Info, s3URL); err != nil {
+	newData := models.BinaryData{
+		DataType:   data.DataType,
+		ObjectName: data.ObjectName,
+		Content:    nil,
+		Info:       data.Info,
+	}
+	if err := d.withTransaction(ctx, func(tx pgx.Tx) error {
+		if err := d.repository.AddBinaryData(ctx, tx, userID, newData); err != nil {
 			return err
 		}
 		return nil

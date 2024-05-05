@@ -26,11 +26,12 @@ message AllUserDataListResponse {
 }
 
 message GetDataRequest {
-    repeated string data_id = 1;
+    DataType data_type = 1;
+    uint64 metadata_id = 2;
 }
 
 message GetDataResponse {
-    repeated DataUnit data_units = 1;
+    DataUnit data_unit = 1;
 }
 
 message DelDataRequest {
@@ -41,7 +42,7 @@ message DelDataResponse {
 }
 
 message DataUnit {
-    DataType type = 1;
+    DataType data_type = 1;
     oneof data {
         LoginPassword login_password = 2;
         TextData text_data = 3;
@@ -53,14 +54,15 @@ message DataUnit {
 
 enum DataType {
     LOGIN_PASSWORD = 0;
-    TEXT_DATA = 1;
-    BINARY_DATA = 2;
-    BANK_CARD = 3;
+    BANK_CARD = 1;
+    TEXT_DATA = 2;
+    BINARY_DATA = 3;
 }
 
 message DataInfo {
-    string data_id = 1;
-    MetaInfo meta_info = 2;
+    uint64 data_id = 1;
+    string data_type = 2;
+    string description = 3;
 }
 
 message MetaInfo {
@@ -82,7 +84,7 @@ message TextData {
 }
 
 message BinaryData {
-    string name = 1;
+    string object_name = 1;
     bytes content = 2;
 }
 

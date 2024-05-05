@@ -1,4 +1,4 @@
-package data
+package user
 
 import (
 	"context"
@@ -16,13 +16,13 @@ import (
 //
 // Returns:
 // - An error if any issues occurred during the transaction or within txFunc.
-func (d *ServiceData) withTransaction(ctx context.Context, txFunc func(pgx.Tx) error) error {
-	tx, err := d.dbPool.Begin(ctx)
+func (u *ServiceUser) withTransaction(ctx context.Context, txFunc func(pgx.Tx) error) error {
+	tx, err := u.dbPool.Begin(ctx)
 	if err != nil {
 		logrus.WithError(err).Error("Error starting transaction")
 		return err
 	}
-	//управление транзакцией при помощи замыкания
+	// transaction management using closure
 	defer func() {
 		if p := recover(); p != nil {
 			if err = tx.Rollback(ctx); err != nil {

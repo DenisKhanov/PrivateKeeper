@@ -33,7 +33,7 @@ func newServiceProvider() *serviceProvider {
 
 // KeeperUserRepository returns the repository for user-related data.
 // If dbPool is nil, it initializes an in-memory repository, otherwise initializes a database repository.
-func (s *serviceProvider) KeeperUserRepository(dbPool *pgxpool.Pool, storagePath string) repositories.UserRepository {
+func (s *serviceProvider) KeeperUserRepository(dbPool *pgxpool.Pool, _ string) repositories.UserRepository {
 	logrus.Info("Creating new Keeper User Repository")
 	var err error
 	if s.repositoryUser == nil {
@@ -54,7 +54,7 @@ func (s *serviceProvider) KeeperUserRepository(dbPool *pgxpool.Pool, storagePath
 
 // KeeperDataRepository returns the repository for data-related data.
 // If dbPool is nil, it initializes an in-memory repository, otherwise initializes a database repository.
-func (s *serviceProvider) KeeperDataRepository(dbPool *pgxpool.Pool, storagePath string) repositories.DataRepository {
+func (s *serviceProvider) KeeperDataRepository(dbPool *pgxpool.Pool, _ string) repositories.DataRepository {
 	logrus.Info("Creating new Keeper Data Repository.")
 	if s.repositoryData == nil {
 		logrus.Info("Initializing repository data.")

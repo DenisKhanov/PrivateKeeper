@@ -7,11 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// GenerateUUID generates a UUID using the github.com/google/uuid library
-func GenerateUUID() uuid.UUID {
-	return uuid.New()
-}
-
 // GetUUIDFromToken we check the validity of the token and if it is valid, then we get and return the UUID from it
 func GetUUIDFromToken(tokenString string) (uuid.UUID, error) {
 	claims := &Claims{}

@@ -11,9 +11,11 @@ import (
 )
 
 func (d *GRPCData) AddData(ctx context.Context, in *proto.AddDataRequest) (*proto.AddDataResponse, error) {
+	//TODO исправить падение сервиса при получении не верного типа в запросе от пользователя
 	userID, ok := ctx.Value(models.UserIDKey).(uuid.UUID)
 	if !ok {
-		logrus.Errorf("context value is not userID: %v", userID)
+		logrus.Info("Could not extract UserID from ctx")
+		return nil, status.Error(codes.Internal, "could not find user ID in context")
 	}
 	logrus.Infof("AddData UUID: %v", userID)
 	var (
@@ -23,8 +25,9 @@ func (d *GRPCData) AddData(ctx context.Context, in *proto.AddDataRequest) (*prot
 		binaryData models.BinaryData
 	)
 	for _, dataUnit := range in.DataUnits {
-		switch dataUnit.Type {
+		switch dataUnit.DataType {
 		case proto.DataType_LOGIN_PASSWORD:
+			loginData.DataType = dataUnit.DataType.String()
 			loginData.Login = dataUnit.GetLoginPassword().Login
 			loginData.Password = dataUnit.GetLoginPassword().Password
 			loginData.Info = dataUnit.MetaInfo.GetWebsite()
@@ -33,6 +36,7 @@ func (d *GRPCData) AddData(ctx context.Context, in *proto.AddDataRequest) (*prot
 			}
 
 		case proto.DataType_BANK_CARD:
+			cardData.DataType = dataUnit.DataType.String()
 			cardData.CVV = dataUnit.GetBankCard().Cvv
 			cardData.Number = dataUnit.GetBankCard().Number
 			cardData.ExpDate = dataUnit.GetBankCard().ExpirationDate
@@ -43,6 +47,7 @@ func (d *GRPCData) AddData(ctx context.Context, in *proto.AddDataRequest) (*prot
 			}
 
 		case proto.DataType_TEXT_DATA:
+			textData.DataType = dataUnit.DataType.String()
 			textData.Content = dataUnit.GetTextData().Content
 			textData.Info = dataUnit.MetaInfo.GetTextDataDescription()
 			if err := d.service.AddTextData(ctx, userID, textData); err != nil {
@@ -50,8 +55,8 @@ func (d *GRPCData) AddData(ctx context.Context, in *proto.AddDataRequest) (*prot
 			}
 
 		case proto.DataType_BINARY_DATA:
-
-			binaryData.ObjectName = dataUnit.GetBinaryData().GetName()
+			binaryData.DataType = dataUnit.DataType.String()
+			binaryData.ObjectName = dataUnit.GetBinaryData().GetObjectName()
 			binaryData.Content = dataUnit.GetBinaryData().GetContent()
 			binaryData.Info = dataUnit.MetaInfo.GetBinaryDataDescription()
 			if err := d.service.AddBinaryData(ctx, userID, binaryData); err != nil {
@@ -59,7 +64,7 @@ func (d *GRPCData) AddData(ctx context.Context, in *proto.AddDataRequest) (*prot
 			}
 
 		default:
-			return nil, status.Errorf(codes.InvalidArgument, "Unsupported data type: %v", dataUnit.Type)
+			return nil, status.Errorf(codes.InvalidArgument, "Unsupported data type: %v", dataUnit.DataType)
 		}
 	}
 

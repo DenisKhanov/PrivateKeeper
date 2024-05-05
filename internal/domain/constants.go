@@ -6,10 +6,3 @@ const (
 	MinPasswordLength = 8
 	MaxPasswordLength = 16
 )
-
-const (
-	LoginPassword = "LOGIN_PASSWORD"
-	Card          = "CARD"
-	Text          = "TEXT"
-	Binary        = "BINARY"
-)

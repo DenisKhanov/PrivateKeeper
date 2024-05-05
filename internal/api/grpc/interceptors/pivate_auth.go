@@ -19,8 +19,9 @@ const grpcHandlersPath = "/keeper_data_v1.KeeperDataV1/"
 
 // authMethods specifies the gRPC methods that require authentication.
 var authMethods = map[string]struct{}{
-	grpcHandlersPath + "AddData": {},
-	grpcHandlersPath + "":        {},
+	grpcHandlersPath + "AddData":         {},
+	grpcHandlersPath + "AllUserDataList": {},
+	grpcHandlersPath + "GetData":         {},
 }
 
 // UnaryPrivateAuthInterceptor is a gRPC interceptor that enforces authentication for specific unary RPCs.
