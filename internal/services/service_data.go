@@ -12,6 +12,7 @@ type DataService interface {
 	ServiceTextData
 	ServiceBinaryData
 	ServiceAllUserDataList
+	ServiceDataDeleter
 }
 
 type ServiceLoginPassword interface {
@@ -36,4 +37,8 @@ type ServiceBinaryData interface {
 
 type ServiceAllUserDataList interface {
 	AllUserDataList(ctx context.Context, userID uuid.UUID) ([]models.Metadata, error)
+}
+
+type ServiceDataDeleter interface {
+	DelData(ctx context.Context, userID uuid.UUID, metadataID int, dataType string) error
 }

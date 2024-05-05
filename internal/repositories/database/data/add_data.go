@@ -8,8 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//TODO оптимизировать запросы (join)?
-
 func (d *RepositoryData) AddLoginPasswordData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.LoginData) error {
 
 	var loginID int

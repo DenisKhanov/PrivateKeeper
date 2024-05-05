@@ -22,6 +22,7 @@ var authMethods = map[string]struct{}{
 	grpcHandlersPath + "AddData":         {},
 	grpcHandlersPath + "AllUserDataList": {},
 	grpcHandlersPath + "GetData":         {},
+	grpcHandlersPath + "DelData":         {},
 }
 
 // UnaryPrivateAuthInterceptor is a gRPC interceptor that enforces authentication for specific unary RPCs.

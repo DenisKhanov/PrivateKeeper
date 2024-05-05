@@ -7,9 +7,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+//TODO изменить нейминг перегруппировать интерфесы интерфейсов
+
 type S3Repository interface {
-	AddBinaryData(ctx context.Context, objectName string, data []byte) error
+	AddBinaryData(ctx context.Context, data models.BinaryData) error
 	GetBinaryData(ctx context.Context, objectName string) ([]byte, error)
+	DelData(ctx context.Context, objectName string) error
 }
 type DataRepository interface {
 	RepoLoginPasswordData
@@ -17,6 +20,7 @@ type DataRepository interface {
 	RepoTextData
 	RepoBinaryData
 	RepoAllUserDataList
+	RepoDataDeleter
 }
 
 type RepoLoginPasswordData interface {
@@ -37,8 +41,13 @@ type RepoTextData interface {
 type RepoBinaryData interface {
 	AddBinaryData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.BinaryData) error
 	GetBinaryData(ctx context.Context, userID uuid.UUID, metadataID int) (models.BinaryData, error)
+	GetS3ObjectName(ctx context.Context, userID uuid.UUID, metadataID int) (string, error)
 }
 
 type RepoAllUserDataList interface {
 	GetAllUserDataList(ctx context.Context, userID uuid.UUID) ([]models.Metadata, error)
+}
+
+type RepoDataDeleter interface {
+	DelData(ctx context.Context, userID uuid.UUID, metadataID int) error
 }

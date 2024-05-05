@@ -3,6 +3,7 @@ package s3
 import (
 	"bytes"
 	"context"
+	"github.com/DenisKhanov/PrivateKeeper/internal/models"
 	"github.com/minio/minio-go/v7"
 	"github.com/sirupsen/logrus"
 )
@@ -17,14 +18,21 @@ import (
 // Returns:
 // - The URL of the uploaded object if the upload is successful.
 // - An error if there is a problem during data upload.
-func (d *KeeperMinio) AddBinaryData(ctx context.Context, objectName string, data []byte) error {
-	reader := bytes.NewReader(data)
-	contentType := "application/octet-stream"
-	info, err := d.Client.PutObject(ctx, d.Bucket, objectName, reader, int64(len(data)), minio.PutObjectOptions{ContentType: contentType})
+func (d *KeeperMinio) AddBinaryData(ctx context.Context, data models.BinaryData) error {
+	reader := bytes.NewReader(data.Content)
+	//TODO разобраться с выставлением правильного контент типа
+
+	opts := minio.PutObjectOptions{
+		ContentType: "application/octet-stream",
+		UserMetadata: map[string]string{
+			"Description": data.Info,
+		},
+	}
+	info, err := d.Client.PutObject(ctx, d.Bucket, data.ObjectName, reader, int64(len(data.Content)), opts)
 	if err != nil {
 		logrus.WithError(err).Error("create file failed")
 		return err
 	}
-	logrus.Infof("Successfully uploaded %s of size %d\n", objectName, info.Size)
+	logrus.Infof("Successfully uploaded %s of size %d\n", data.ObjectName, info.Size)
 	return nil
 }

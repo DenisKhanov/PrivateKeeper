@@ -35,7 +35,8 @@ message GetDataResponse {
 }
 
 message DelDataRequest {
-    repeated DataUnit data_units = 1;
+    DataType data_type = 1;
+    uint64 metadata_id = 2;
 }
 
 message DelDataResponse {

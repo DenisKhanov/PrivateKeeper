@@ -6,3 +6,5 @@ const (
 	MinPasswordLength = 8
 	MaxPasswordLength = 16
 )
+
+const BinaryData = "BINARY_DATA"

@@ -7,23 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//var loginPasswordID int
-//const sqlQuery = `SELECT login_password_id FROM data_units WHERE user_id=$1 AND metadata_id = $2`
-//if err := d.dbPool.QueryRow(ctx, sqlQuery, userID, metadataID).Scan(&loginPasswordID); err != nil {
-//	logrus.WithError(err).Error("Error getting login/password id.")
-//	return models.LoginData{}, err
-//}
-//const sqlQuery1 = `SELECT login, password FROM logins_passwords WHERE id = $1`
-//if err := d.dbPool.QueryRow(ctx, sqlQuery1, metadataID).Scan(&loginData.Login, &loginData.Login); err != nil {
-//	logrus.WithError(err).Error("Error getting login/password data.")
-//	return models.LoginData{}, err
-//}
-//const sqlQuery2 = `SELECT website FROM metadata WHERE id = $1`
-//if err := d.dbPool.QueryRow(ctx, sqlQuery2, metadataID).Scan(&loginData.Info); err != nil {
-//	logrus.WithError(err).Error("Error getting login/password info.")
-//	return models.LoginData{}, err
-//}
-//return loginData, nil
+//TODO возвращать в сервис кастомные ошибки
 
 func (d *RepositoryData) GetLoginPasswordData(ctx context.Context, userID uuid.UUID, metadataID int) (models.LoginData, error) {
 	var loginData models.LoginData
@@ -51,7 +35,7 @@ func (d *RepositoryData) GetLoginPasswordData(ctx context.Context, userID uuid.U
 		logrus.WithError(err).Error("Error getting login/password data.")
 		return models.LoginData{}, err
 	}
-
+	logrus.Info("Success getting login/password data.")
 	return loginData, nil
 }
 
@@ -84,6 +68,7 @@ func (d *RepositoryData) GetCardData(ctx context.Context, userID uuid.UUID, meta
 		logrus.WithError(err).Error("Error getting bank card data.")
 		return models.CardData{}, err
 	}
+	logrus.Info("Success getting bank card data.")
 	return cardData, nil
 }
 
@@ -110,6 +95,7 @@ func (d *RepositoryData) GetTextData(ctx context.Context, userID uuid.UUID, meta
 		logrus.WithError(err).Error("Error getting text data.")
 		return models.TextData{}, err
 	}
+	logrus.Info("Success getting text data.")
 	return textData, nil
 }
 
@@ -136,5 +122,6 @@ func (d *RepositoryData) GetBinaryData(ctx context.Context, userID uuid.UUID, me
 		logrus.WithError(err).Error("Error getting binary data.")
 		return models.BinaryData{}, err
 	}
+	logrus.Info("Success getting binary data.")
 	return binaryData, nil
 }

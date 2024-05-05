@@ -44,7 +44,7 @@ func (d *ServiceData) AddTextData(ctx context.Context, userID uuid.UUID, data mo
 }
 
 func (d *ServiceData) AddBinaryData(ctx context.Context, userID uuid.UUID, data models.BinaryData) error {
-	if err := d.s3Repository.AddBinaryData(ctx, data.ObjectName, data.Content); err != nil {
+	if err := d.s3Repository.AddBinaryData(ctx, data); err != nil {
 		return err
 	}
 	newData := models.BinaryData{
