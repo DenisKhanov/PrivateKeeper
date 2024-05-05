@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package keeper_data_v1;
+
+option go_package = "github.com/DenisKhanov/PrivateKeeper/pkg/keeper_data_v1;KeeperDataV1";
+
+service KeeperDataV1 {
+    rpc AddData (AddDataRequest) returns (AddDataResponse);
+    rpc AllUserDataList (AllUserDataListRequest) returns (AllUserDataListResponse);
+    rpc GetData (GetDataRequest) returns (GetDataResponse);
+    rpc DelData (DelDataRequest) returns (DelDataResponse);
+}
+
+message AddDataRequest {
+    repeated DataUnit data_units = 1;
+}
+
+message AddDataResponse {
+}
+
+message AllUserDataListRequest {
+}
+
+message AllUserDataListResponse {
+    repeated DataInfo all_data_list = 1;
+}
+
+message GetDataRequest {
+    DataType data_type = 1;
+    uint64 metadata_id = 2;
+}
+
+message GetDataResponse {
+    DataUnit data_unit = 1;
+}
+
+message DelDataRequest {
+    DataType data_type = 1;
+    uint64 metadata_id = 2;
+}
+
+message DelDataResponse {
+}
+
+message DataUnit {
+    DataType data_type = 1;
+    oneof data {
+        LoginPassword login_password = 2;
+        TextData text_data = 3;
+        BinaryData binary_data = 4;
+        BankCard bank_card = 5;
+    }
+    MetaInfo meta_info = 6;
+}
+
+enum DataType {
+    LOGIN_PASSWORD = 0;
+    BANK_CARD = 1;
+    TEXT_DATA = 2;
+    BINARY_DATA = 3;
+}
+
+message DataInfo {
+    uint64 data_id = 1;
+    string data_type = 2;
+    string description = 3;
+}
+
+message MetaInfo {
+    oneof data {
+        string website = 1;
+        string bank = 2;
+        string text_data_description = 3;
+        string binary_data_description = 4;
+    }
+}
+
+message LoginPassword {
+    string login = 1;
+    string password = 2;
+}
+
+message TextData {
+    string content = 1;
+}
+
+message BinaryData {
+    string object_name = 1;
+    bytes content = 2;
+}
+
+message BankCard {
+    string holder_name = 1;
+    string number = 2;
+    string expiration_date = 3;
+    string cvv = 4;
+}
