@@ -13,17 +13,22 @@ import (
 // ENVConfig holds configuration settings extracted from environment variables.
 // This struct is used to configure various aspects of the application.
 type ENVConfig struct {
-	ConfigFile     string `env:"CONFIG"`
-	EnvStoragePath string `env:"FILE_STORAGE_PATH"`
-	EnvLogLevel    string `env:"LOG_LEVEL"`
-	EnvDataBase    string `env:"DATABASE_DSN"`
-	EnvTLS         string `env:"ENABLE_TLS"`
-	EnvSubnet      string `env:"TRUSTED_SUBNET"`
-	EnvGRPC        string `env:"GRPC_SERVER"`
-	EnvS3Bucket    string `env:"S3_BUCKET"`
-	EnvS3Endpoint  string `env:"S3_ENDPOINT"`
-	EnvS3AccessKey string `env:"S3_ACCESS_KEY"`
-	EnvS3SecretKey string `env:"S3_SECRET_KEY"`
+	ConfigFile           string `env:"CONFIG"`
+	EnvStoragePath       string `env:"FILE_STORAGE_PATH"`
+	EnvLogLevel          string `env:"LOG_LEVEL"`
+	EnvDataBase          string `env:"DATABASE_DSN"`
+	EnvTLS               string `env:"ENABLE_TLS"`
+	EnvSubnet            string `env:"TRUSTED_SUBNET"`
+	EnvGRPC              string `env:"GRPC_SERVER"`
+	EnvS3Bucket          string `env:"S3_BUCKET"`
+	EnvS3Endpoint        string `env:"S3_ENDPOINT"`
+	EnvS3AccessKey       string `env:"S3_ACCESS_KEY"`
+	EnvS3SecretKey       string `env:"S3_SECRET_KEY"`
+	EnvRSAPrivateKeyPath string `env:"RSA_PRIVATE_KEY_PATH"`
+	EnvRSAPublicKeyPath  string `env:"RSA_PUBLIC_KEY_PATH"`
+	EnvTLSCertPath       string `env:"TLS_CERT_PATH"`
+	EnvTLSKeyPath        string `env:"TLS_KEY_PATH"`
+	EnvTLSCaCertPath     string `env:"TLS_CA_CERT_PATH"`
 }
 
 // NewConfig creates a new ENVConfig instance by parsing command line flags and environment variables.
@@ -52,6 +57,16 @@ func NewConfig() (*ENVConfig, error) {
 	flag.StringVar(&cfg.EnvS3AccessKey, "a", "", "Enter s3 login or use S3_ACCESS_KEY env")
 
 	flag.StringVar(&cfg.EnvS3SecretKey, "k", "", "Enter s3 password or use S3_SECRET_KEY env")
+
+	flag.StringVar(&cfg.EnvRSAPrivateKeyPath, "p", "/home/denis/keys/private_key.pem", "Enter RSA private key file path or use RSA_PRIVATE_KEY_PATH env")
+
+	flag.StringVar(&cfg.EnvRSAPublicKeyPath, "h", "/home/denis/keys/public_key.pem", "Enter RSA public key file path or use RSA_PUBLIC_KEY_PATH env")
+
+	flag.StringVar(&cfg.EnvTLSCertPath, "j", "/pkg/tlsconfig/cert/server/server.crt", "Enter TLS certificate file path or use TLS_CERT_PATH env")
+
+	flag.StringVar(&cfg.EnvTLSKeyPath, "n", "/pkg/tlsconfig/cert/server/server.key", "Enter TLS key file path or use TLS_KEY_PATH env")
+
+	flag.StringVar(&cfg.EnvTLSCaCertPath, "m", "/pkg/tlsconfig/cert/server/ca.crt", "Enter TLS CA_CERT_PATH env")
 
 	flag.Parse()
 
@@ -128,6 +143,21 @@ func setConfigFromFile(path string, cfg1 *ENVConfig) error {
 	}
 	if flag.Lookup("k") == nil {
 		cfg1.EnvS3SecretKey = cfgFromFile.EnvS3SecretKey
+	}
+	if flag.Lookup("p") == nil {
+		cfg1.EnvRSAPrivateKeyPath = cfgFromFile.EnvRSAPrivateKeyPath
+	}
+	if flag.Lookup("h") == nil {
+		cfg1.EnvRSAPublicKeyPath = cfgFromFile.EnvRSAPublicKeyPath
+	}
+	if flag.Lookup("j") == nil {
+		cfg1.EnvTLSCertPath = cfgFromFile.EnvTLSCertPath
+	}
+	if flag.Lookup("n") == nil {
+		cfg1.EnvTLSKeyPath = cfgFromFile.EnvTLSKeyPath
+	}
+	if flag.Lookup("m") == nil {
+		cfg1.EnvTLSCaCertPath = cfgFromFile.EnvTLSCaCertPath
 	}
 	return nil
 }

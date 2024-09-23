@@ -4,6 +4,7 @@ import (
 	"context"
 	usererrors "github.com/DenisKhanov/PrivateKeeper/internal/errors"
 	"github.com/DenisKhanov/PrivateKeeper/internal/models"
+	"github.com/DenisKhanov/PrivateKeeper/internal/secure"
 	"github.com/DenisKhanov/PrivateKeeper/pkg/auth"
 	"github.com/DenisKhanov/PrivateKeeper/pkg/validate"
 	"github.com/google/uuid"
@@ -28,7 +29,7 @@ func (u *ServiceUser) SignUp(ctx context.Context, user models.User) (token strin
 		logrus.Error(err)
 		return "", err
 	}
-	//TODO уйти от дублирования кода
+	//TODO уйти от дублирования кода (может в одном методе проверять и логин и email)
 	exists, err := u.repository.CheckExists(ctx, user.Login)
 	logrus.Info("CheckExists: ", exists)
 	if err != nil {
@@ -65,7 +66,13 @@ func (u *ServiceUser) SignUp(ctx context.Context, user models.User) (token strin
 		logrus.WithError(err).Error("Failed to build token")
 		return "", usererrors.ErrSaveNewUser
 	}
-	if err = u.repository.AddUser(ctx, userID, user.Name, user.Email, user.Login, hashedPassword); err != nil {
+	aesKey, err := secure.GenerateAESKey()
+	if err != nil {
+		logrus.WithError(err).Error("Failed to generate AES key")
+	}
+	logrus.Info(aesKey)
+	encryptedKey, err := secure.EncryptAESKey(u.publicKey, aesKey)
+	if err = u.repository.AddUser(ctx, userID, user.Name, user.Email, user.Login, hashedPassword, encryptedKey); err != nil {
 		logrus.WithError(err).Error("Failed to save new user in database")
 		return "", usererrors.ErrSaveNewUser
 	}

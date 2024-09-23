@@ -26,6 +26,7 @@ message SignUpRequest {
 }
 
 message SignUpResponse {
+    string token = 1;
 }
 
 message SignInRequest {
@@ -34,4 +35,5 @@ message SignInRequest {
 }
 
 message SignInResponse {
+    string token = 1;
 }

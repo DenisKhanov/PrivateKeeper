@@ -8,11 +8,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (d *RepositoryData) AddLoginPasswordData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.LoginData) error {
+func (d *RepositoryData) AddLoginPasswordData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.KeepData) error {
 
 	var loginID int
-	const sqlQuery = `INSERT INTO logins_passwords (login, password) VALUES ($1, $2) RETURNING id`
-	err := tx.QueryRow(ctx, sqlQuery, data.Login, data.Password).Scan(&loginID)
+	const sqlQuery = `INSERT INTO logins_passwords (encrypted_data) VALUES ($1) RETURNING id`
+	err := tx.QueryRow(ctx, sqlQuery, data.EncryptedData).Scan(&loginID)
 	if err != nil {
 		logrus.WithError(err).Error("Login/password don't save in database logins_passwords.")
 		return err
@@ -34,10 +34,10 @@ func (d *RepositoryData) AddLoginPasswordData(ctx context.Context, tx pgx.Tx, us
 	return nil
 }
 
-func (d *RepositoryData) AddCardData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.CardData) error {
+func (d *RepositoryData) AddCardData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.KeepData) error {
 	var cardID int
-	const sqlQuery = `INSERT INTO bank_cards (cvv,number,expiration_date,holder_name) VALUES ($1,$2,$3,$4) RETURNING id`
-	err := tx.QueryRow(ctx, sqlQuery, data.CVV, data.Number, data.ExpDate, data.HolderName).Scan(&cardID)
+	const sqlQuery = `INSERT INTO bank_cards (encrypted_data) VALUES ($1) RETURNING id`
+	err := tx.QueryRow(ctx, sqlQuery, data.EncryptedData).Scan(&cardID)
 	if err != nil {
 		logrus.WithError(err).Error("Card don't save in database bank_cards.")
 		return err
@@ -59,10 +59,10 @@ func (d *RepositoryData) AddCardData(ctx context.Context, tx pgx.Tx, userID uuid
 	return nil
 }
 
-func (d *RepositoryData) AddTextData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.TextData) error {
+func (d *RepositoryData) AddTextData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.KeepData) error {
 	var textID int
-	const sqlQuery = `INSERT INTO text_data (content) VALUES ($1) RETURNING id`
-	err := tx.QueryRow(ctx, sqlQuery, data.Content).Scan(&textID)
+	const sqlQuery = `INSERT INTO text_data (encrypted_data) VALUES ($1) RETURNING id`
+	err := tx.QueryRow(ctx, sqlQuery, data.EncryptedData).Scan(&textID)
 	if err != nil {
 		logrus.WithError(err).Error("Text don't save in database text_data.")
 		return err
@@ -84,7 +84,7 @@ func (d *RepositoryData) AddTextData(ctx context.Context, tx pgx.Tx, userID uuid
 	return nil
 }
 
-func (d *RepositoryData) AddBinaryData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.BinaryData) error {
+func (d *RepositoryData) AddBinaryData(ctx context.Context, tx pgx.Tx, userID uuid.UUID, data models.EncryptedBinaryData) error {
 	var binaryID int
 	const sqlQuery = `INSERT INTO binary_data (s3_object_name) VALUES ($1) RETURNING id`
 	err := tx.QueryRow(ctx, sqlQuery, data.ObjectName).Scan(&binaryID)

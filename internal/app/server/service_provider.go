@@ -1,6 +1,7 @@
-package app
+package server
 
 import (
+	"crypto/rsa"
 	grpcdata "github.com/DenisKhanov/PrivateKeeper/internal/api/grpc/data"
 	grpcuser "github.com/DenisKhanov/PrivateKeeper/internal/api/grpc/user"
 	"github.com/DenisKhanov/PrivateKeeper/internal/repositories"
@@ -82,44 +83,46 @@ func (s *serviceProvider) KeeperS3Repository(client *minio.Client, bucket string
 }
 
 // KeeperUserService returns the service for user-related operations.
-func (s *serviceProvider) KeeperUserService(dbPool *pgxpool.Pool, storagePath string) services.UserService {
+func (s *serviceProvider) KeeperUserService(dbPool *pgxpool.Pool, storagePath string, publicKey *rsa.PublicKey) services.UserService {
 	if s.serviceUser == nil {
 		s.serviceUser = sreviceuser.NewServiceUser(
 			s.KeeperUserRepository(dbPool, storagePath),
+			publicKey,
 		)
 	}
 	return s.serviceUser
 }
 
 // KeeperDataService returns the service for data-related operations.
-func (s *serviceProvider) KeeperDataService(dbPool *pgxpool.Pool, client *minio.Client, storagePath, bucket string) services.DataService {
+func (s *serviceProvider) KeeperDataService(dbPool *pgxpool.Pool, client *minio.Client, storagePath, bucket string, privateKey *rsa.PrivateKey) services.DataService {
 	if s.serviceData == nil {
 		s.serviceData = srevicedata.NewServiceData(
 			s.KeeperDataRepository(dbPool, storagePath),
 			s.KeeperS3Repository(client, bucket),
 			dbPool,
+			privateKey,
 		)
 	}
 	return s.serviceData
 }
 
 // KeeperUserGRPC returns the handler for user-related HTTP endpoints.
-func (s *serviceProvider) KeeperUserGRPC(dbPool *pgxpool.Pool, storagePath string) *grpcuser.GRPCUser {
+func (s *serviceProvider) KeeperUserGRPC(dbPool *pgxpool.Pool, storagePath string, publicKey *rsa.PublicKey) *grpcuser.GRPCUser {
 	logrus.Info("Creating Keeper GRPC.")
 	if s.grpcUser == nil {
 		logrus.Info("Initializing grpc user.")
-		keeperGRPC := grpcuser.NewGRPCUser(s.KeeperUserService(dbPool, storagePath))
+		keeperGRPC := grpcuser.NewGRPCUser(s.KeeperUserService(dbPool, storagePath, publicKey))
 		s.grpcUser = keeperGRPC
 	}
 	return s.grpcUser
 }
 
 // KeeperDataGRPC returns the handler for data-related HTTP endpoints.
-func (s *serviceProvider) KeeperDataGRPC(dbPool *pgxpool.Pool, client *minio.Client, storagePath, bucket string) *grpcdata.GRPCData {
+func (s *serviceProvider) KeeperDataGRPC(dbPool *pgxpool.Pool, client *minio.Client, storagePath, bucket string, privateKey *rsa.PrivateKey) *grpcdata.GRPCData {
 	logrus.Info("Creating Keeper GRPC.")
 	if s.grpcData == nil {
 		logrus.Info("Initializing grpc data.")
-		keeperGRPC := grpcdata.NewGRPCData(s.KeeperDataService(dbPool, client, storagePath, bucket))
+		keeperGRPC := grpcdata.NewGRPCData(s.KeeperDataService(dbPool, client, storagePath, bucket, privateKey))
 		s.grpcData = keeperGRPC
 	}
 	return s.grpcData

@@ -4,7 +4,7 @@ package interceptors
 
 import (
 	"context"
-	"github.com/DenisKhanov/PrivateKeeper/internal/models"
+	"github.com/DenisKhanov/PrivateKeeper/internal/domain"
 	"github.com/DenisKhanov/PrivateKeeper/pkg/auth"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -54,6 +54,6 @@ func UnaryPrivateAuthInterceptor(ctx context.Context, req interface{},
 		return nil, status.Error(codes.Unauthenticated, `invalid token`)
 	}
 
-	ctx = context.WithValue(ctx, models.UserIDKey, userID)
+	ctx = context.WithValue(ctx, domain.UserIDKey, userID)
 	return handler(ctx, req)
 }

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"crypto/rsa"
 	"github.com/DenisKhanov/PrivateKeeper/internal/repositories"
 	repodata "github.com/DenisKhanov/PrivateKeeper/internal/repositories/database/data"
 	repouser "github.com/DenisKhanov/PrivateKeeper/internal/repositories/database/user"
@@ -16,13 +17,15 @@ type ServiceData struct {
 	repository   repositories.DataRepository
 	s3Repository repositories.S3Repository
 	dbPool       *pgxpool.Pool
+	privateKey   *rsa.PrivateKey
 }
 
 // NewServiceData .....
-func NewServiceData(repository repositories.DataRepository, s3 repositories.S3Repository, dbPool *pgxpool.Pool) *ServiceData {
+func NewServiceData(repository repositories.DataRepository, s3 repositories.S3Repository, dbPool *pgxpool.Pool, privateKey *rsa.PrivateKey) *ServiceData {
 	return &ServiceData{
 		repository:   repository,
 		s3Repository: s3,
 		dbPool:       dbPool,
+		privateKey:   privateKey,
 	}
 }

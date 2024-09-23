@@ -9,12 +9,11 @@ import (
 
 //TODO возвращать в сервис кастомные ошибки
 
-func (d *RepositoryData) GetLoginPasswordData(ctx context.Context, userID uuid.UUID, metadataID int) (models.LoginData, error) {
-	var loginData models.LoginData
+func (d *RepositoryData) GetLoginPasswordData(ctx context.Context, userID uuid.UUID, metadataID int) (models.KeepData, error) {
+	var loginData models.KeepData
 	const sqlQuery = `
         SELECT
-            logins_passwords.login,
-            logins_passwords.password,
+            logins_passwords.encrypted_data,
             metadata.website
         FROM
             data_units
@@ -28,25 +27,21 @@ func (d *RepositoryData) GetLoginPasswordData(ctx context.Context, userID uuid.U
     `
 
 	if err := d.dbPool.QueryRow(ctx, sqlQuery, userID, metadataID).Scan(
-		&loginData.Login,
-		&loginData.Password,
+		&loginData.EncryptedData,
 		&loginData.Info,
 	); err != nil {
 		logrus.WithError(err).Error("Error getting login/password data.")
-		return models.LoginData{}, err
+		return models.KeepData{}, err
 	}
 	logrus.Info("Success getting login/password data.")
 	return loginData, nil
 }
 
-func (d *RepositoryData) GetCardData(ctx context.Context, userID uuid.UUID, metadataID int) (models.CardData, error) {
-	var cardData models.CardData
+func (d *RepositoryData) GetCardData(ctx context.Context, userID uuid.UUID, metadataID int) (models.KeepData, error) {
+	var cardData models.KeepData
 	const sqlQuery = `
 		SELECT 
-    		bank_cards.number,
-    		bank_cards.cvv, 
-    		bank_cards.expiration_date, 
-    		bank_cards.holder_name,
+    		bank_cards.encrypted_data,
     		metadata.bank
 		FROM 
 		    data_units 
@@ -59,24 +54,21 @@ func (d *RepositoryData) GetCardData(ctx context.Context, userID uuid.UUID, meta
 		    AND data_units.metadata_id = $2;
 	`
 	if err := d.dbPool.QueryRow(ctx, sqlQuery, userID, metadataID).Scan(
-		&cardData.Number,
-		&cardData.CVV,
-		&cardData.ExpDate,
-		&cardData.HolderName,
+		&cardData.EncryptedData,
 		&cardData.Info,
 	); err != nil {
 		logrus.WithError(err).Error("Error getting bank card data.")
-		return models.CardData{}, err
+		return models.KeepData{}, err
 	}
 	logrus.Info("Success getting bank card data.")
 	return cardData, nil
 }
 
-func (d *RepositoryData) GetTextData(ctx context.Context, userID uuid.UUID, metadataID int) (models.TextData, error) {
-	var textData models.TextData
+func (d *RepositoryData) GetTextData(ctx context.Context, userID uuid.UUID, metadataID int) (models.KeepData, error) {
+	var textData models.KeepData
 	const sqlQuery = `
 		SELECT 
-		    text_data.content,
+		    text_data.encrypted_data,
 		    metadata.text_data_description
 		FROM 
 		    data_units
@@ -89,18 +81,18 @@ func (d *RepositoryData) GetTextData(ctx context.Context, userID uuid.UUID, meta
 		  	AND data_units.metadata_id = $2
 	`
 	if err := d.dbPool.QueryRow(ctx, sqlQuery, userID, metadataID).Scan(
-		&textData.Content,
+		&textData.EncryptedData,
 		&textData.Info,
 	); err != nil {
 		logrus.WithError(err).Error("Error getting text data.")
-		return models.TextData{}, err
+		return models.KeepData{}, err
 	}
 	logrus.Info("Success getting text data.")
 	return textData, nil
 }
 
-func (d *RepositoryData) GetBinaryData(ctx context.Context, userID uuid.UUID, metadataID int) (models.BinaryData, error) {
-	var binaryData models.BinaryData
+func (d *RepositoryData) GetBinaryData(ctx context.Context, userID uuid.UUID, metadataID int) (models.EncryptedBinaryData, error) {
+	var binaryData models.EncryptedBinaryData
 	const sqlQuery = `
 		SELECT 
 		    binary_data.s3_object_name,
@@ -120,7 +112,7 @@ func (d *RepositoryData) GetBinaryData(ctx context.Context, userID uuid.UUID, me
 		&binaryData.Info,
 	); err != nil {
 		logrus.WithError(err).Error("Error getting binary data.")
-		return models.BinaryData{}, err
+		return models.EncryptedBinaryData{}, err
 	}
 	logrus.Info("Success getting binary data.")
 	return binaryData, nil

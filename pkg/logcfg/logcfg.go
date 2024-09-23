@@ -18,7 +18,7 @@ import (
 // Parameters:
 //   - EnvLogs: The log level to set, provided as a string.
 //     Valid log levels are "panic", "fatal", "errors", "warn", "info", and "debug".
-func RunLoggerConfig(EnvLogsLevel string) {
+func RunLoggerConfig(EnvLogsLevel, logFileName string) {
 	// Parse log level from the environment variable
 	logLevel, err := logrus.ParseLevel(EnvLogsLevel)
 	if err != nil {
@@ -41,7 +41,7 @@ func RunLoggerConfig(EnvLogsLevel string) {
 
 	// Configure log file rotation using lumberjack
 	mw := io.MultiWriter(os.Stdout, &lumberjack.Logger{
-		Filename:   "keeper.log",
+		Filename:   logFileName,
 		MaxSize:    50,
 		MaxBackups: 3,
 		MaxAge:     30,

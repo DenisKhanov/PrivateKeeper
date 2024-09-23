@@ -1,12 +1,18 @@
-package app
+package server
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/tls"
+	tlsCreds "google.golang.org/grpc/credentials"
+
 	"github.com/DenisKhanov/PrivateKeeper/config"
 	myGRPC "github.com/DenisKhanov/PrivateKeeper/internal/api/grpc/interceptors"
+	"github.com/DenisKhanov/PrivateKeeper/internal/secure"
 	protodata "github.com/DenisKhanov/PrivateKeeper/pkg/keeper_v1/data"
 	protouser "github.com/DenisKhanov/PrivateKeeper/pkg/keeper_v1/user"
 	"github.com/DenisKhanov/PrivateKeeper/pkg/logcfg"
+	"github.com/DenisKhanov/PrivateKeeper/pkg/tlsconfig"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -15,6 +21,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"net"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"sync"
@@ -30,6 +37,9 @@ type App struct {
 	minioClient     *minio.Client     // The client s3 minio storage
 	trustedSubnets  []*net.IPNet      // The collection trusted subnet
 	serverGRPC      *grpc.Server      // The serverGRPC instance
+	publicKey       *rsa.PublicKey
+	privateKey      *rsa.PrivateKey
+	tls             *tls.Config
 }
 
 // NewApp creates a new instance of the application.
@@ -51,8 +61,11 @@ func (a *App) Run() {
 func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		a.initConfig,
+		a.initTLS,
+		a.initKeyManager,
 		a.initTrustedSubnets,
 		a.initDBConnection,
+		a.runMigrations,
 		a.initS3Client,
 		a.initServiceProvider,
 		a.initKeeperGRPCServer,
@@ -65,6 +78,29 @@ func (a *App) initDeps(ctx context.Context) error {
 		}
 	}
 
+	return nil
+}
+func (a *App) initTLS(_ context.Context) error {
+	newTls, err := tlsconfig.NewServerTLS(a.config.EnvTLSCertPath, a.config.EnvTLSKeyPath, a.config.EnvTLSCaCertPath)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to initialize tls")
+		return err
+	}
+	a.tls = newTls
+	return nil
+}
+
+func (a *App) initKeyManager(_ context.Context) error {
+	privateKey, err := secure.LoadRSAPrivateKey(a.config.EnvRSAPrivateKeyPath)
+	if err != nil {
+		return err
+	}
+	publicKey, err := secure.LoadRSAPublicKey(a.config.EnvRSAPublicKeyPath)
+	if err != nil {
+		return err
+	}
+	a.privateKey = privateKey
+	a.publicKey = publicKey
 	return nil
 }
 
@@ -119,6 +155,17 @@ func (a *App) initDBConnection(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) runMigrations(_ context.Context) error {
+	cmd := exec.Command("goose", "-dir=pkg/db/migrations", "postgres", a.config.EnvDataBase, "up")
+	err := cmd.Run()
+	if err != nil {
+		logrus.WithError(err).Error("Error running migrations")
+		return err
+	}
+	logrus.Info("Migrations done")
+	return nil
+}
+
 // initS3Client initializes the s3 client
 func (a *App) initS3Client(_ context.Context) error {
 	minioClient, err := minio.New(a.config.EnvS3Endpoint, &minio.Options{
@@ -141,12 +188,13 @@ func (a *App) initServiceProvider(_ context.Context) error {
 
 // initKeeperGRPCServer initializes the  serverGRPC with interceptors.
 func (a *App) initKeeperGRPCServer(_ context.Context) error {
-	keeperUserGRPC := a.serviceProvider.KeeperUserGRPC(a.dbPool, a.config.EnvStoragePath)
-	keeperDataGRPC := a.serviceProvider.KeeperDataGRPC(a.dbPool, a.minioClient, a.config.EnvStoragePath, a.config.EnvS3Bucket)
+	keeperUserGRPC := a.serviceProvider.KeeperUserGRPC(a.dbPool, a.config.EnvStoragePath, a.publicKey)
+	keeperDataGRPC := a.serviceProvider.KeeperDataGRPC(a.dbPool, a.minioClient, a.config.EnvStoragePath, a.config.EnvS3Bucket, a.privateKey)
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(myGRPC.UnaryLoggerInterceptor,
+	server := grpc.NewServer(grpc.Creds(tlsCreds.NewTLS(a.tls)), grpc.ChainUnaryInterceptor(myGRPC.UnaryLoggerInterceptor,
 		myGRPC.UnaryTrustedSubnetsInterceptor(a.trustedSubnets),
 		myGRPC.UnaryPrivateAuthInterceptor),
+		grpc.StreamInterceptor(myGRPC.StreamPrivateAuthInterceptor),
 	)
 	reflection.Register(server)
 	a.serverGRPC = server
@@ -160,7 +208,8 @@ func (a *App) initKeeperGRPCServer(_ context.Context) error {
 
 // runKeeperServer starts the gRPC server with graceful shutdown.
 func (a *App) runKeeperServer() {
-	logcfg.RunLoggerConfig(a.config.EnvLogLevel)
+	logFileName := "keeperServer.log"
+	logcfg.RunLoggerConfig(a.config.EnvLogLevel, logFileName)
 
 	//run gRPC server
 	go func() {

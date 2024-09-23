@@ -9,6 +9,7 @@ service KeeperDataV1 {
     rpc AllUserDataList (AllUserDataListRequest) returns (AllUserDataListResponse);
     rpc GetData (GetDataRequest) returns (GetDataResponse);
     rpc DelData (DelDataRequest) returns (DelDataResponse);
+    rpc UploadBinaryData (stream UploadBigBinaryRequest) returns (UploadBigBinaryResponse);
 }
 
 message AddDataRequest {
@@ -40,6 +41,14 @@ message DelDataRequest {
 }
 
 message DelDataResponse {
+}
+
+message UploadBigBinaryRequest {
+    DataUnit data_unit = 1;
+}
+
+message UploadBigBinaryResponse {
+    string message = 1;
 }
 
 message DataUnit {

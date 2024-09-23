@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/DenisKhanov/PrivateKeeper/internal/models"
 	"github.com/google/uuid"
+	"io"
 )
 
 type DataService interface {
@@ -33,6 +34,7 @@ type ServiceTextData interface {
 type ServiceBinaryData interface {
 	AddBinaryData(ctx context.Context, userID uuid.UUID, data models.BinaryData) error
 	GetDecodedBinaryData(ctx context.Context, userID uuid.UUID, metadataID int) (models.BinaryData, error)
+	UploadBigData(ctx context.Context, userID uuid.UUID, binaryInfo models.EncryptedBinaryData, content io.Reader) error
 }
 
 type ServiceAllUserDataList interface {

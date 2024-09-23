@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"github.com/DenisKhanov/PrivateKeeper/internal/domain"
 	"github.com/DenisKhanov/PrivateKeeper/internal/models"
 	proto "github.com/DenisKhanov/PrivateKeeper/pkg/keeper_v1/user"
 	"google.golang.org/grpc"
@@ -32,8 +33,11 @@ func (u GRPCUser) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.S
 
 	}
 	if err = grpc.SendHeader(ctx, metadata.New(map[string]string{
-		string(models.TokenKey): tokenString})); err != nil {
+		string(domain.TokenKey): tokenString})); err != nil {
 		return nil, status.Errorf(codes.Unknown, `error send token in metadata: %v`, err)
 	}
-	return nil, status.Error(codes.OK, "User created successfully")
+	resp := &proto.SignUpResponse{
+		Token: tokenString,
+	}
+	return resp, status.Error(codes.OK, "User created successfully")
 }

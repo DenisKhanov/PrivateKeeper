@@ -3,62 +3,123 @@ package data
 import (
 	"context"
 	"github.com/DenisKhanov/PrivateKeeper/internal/models"
+	"github.com/DenisKhanov/PrivateKeeper/internal/secure"
 	"github.com/google/uuid"
+	jsoniter "github.com/json-iterator/go"
+	"github.com/sirupsen/logrus"
 )
 
 func (d *ServiceData) GetDecodedLoginPasswordData(ctx context.Context, userID uuid.UUID, metadataID int) (models.LoginData, error) {
-	loginPasswordData, err := d.repository.GetLoginPasswordData(ctx, userID, metadataID)
+	var decryptedLoginData models.LoginData
+	data, err := d.repository.GetLoginPasswordData(ctx, userID, metadataID)
 	if err != nil {
 		return models.LoginData{}, err
 	}
-	//TODO тут будет происходить расшифровка данных
-	var decodedLoginPasswordData = models.LoginData{
-		Login:    loginPasswordData.Login,
-		Password: loginPasswordData.Password,
-		Info:     loginPasswordData.Info,
+	encryptedKey, err := d.repository.GetEncryptedKey(ctx, userID)
+	if err != nil {
+		return models.LoginData{}, err
 	}
-	return decodedLoginPasswordData, nil
+	decryptedKey, err := secure.DecryptAESKey(d.privateKey, encryptedKey)
+	if err != nil {
+		return models.LoginData{}, err
+	}
+	decrypted, err := secure.DecryptDataAES(decryptedKey, data.EncryptedData)
+	if err != nil {
+		return models.LoginData{}, err
+	}
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	if err = json.Unmarshal(decrypted, &decryptedLoginData); err != nil {
+		logrus.WithError(err).Error("error unmarshalling decrypted login/password data")
+		return models.LoginData{}, err
+	}
+
+	decryptedLoginData.DataType = data.DataType
+	decryptedLoginData.Info = data.Info
+
+	return decryptedLoginData, nil
 }
 
 func (d *ServiceData) GetDecodedBankCardData(ctx context.Context, userID uuid.UUID, metadataID int) (models.CardData, error) {
-	bankCardData, err := d.repository.GetCardData(ctx, userID, metadataID)
+
+	var decryptedCardData models.CardData
+	data, err := d.repository.GetCardData(ctx, userID, metadataID)
 	if err != nil {
 		return models.CardData{}, err
 	}
-	//TODO тут будет происходить расшифровка данных
-	var decodedBankCardData = models.CardData{
-		CVV:        bankCardData.CVV,
-		Number:     bankCardData.Number,
-		ExpDate:    bankCardData.ExpDate,
-		HolderName: bankCardData.HolderName,
-		Info:       bankCardData.Info,
+	encryptedKey, err := d.repository.GetEncryptedKey(ctx, userID)
+	if err != nil {
+		return models.CardData{}, err
 	}
-	return decodedBankCardData, nil
+	decryptedKey, err := secure.DecryptAESKey(d.privateKey, encryptedKey)
+	if err != nil {
+		return models.CardData{}, err
+	}
+	decrypted, err := secure.DecryptDataAES(decryptedKey, data.EncryptedData)
+	if err != nil {
+		return models.CardData{}, err
+	}
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	if err = json.Unmarshal(decrypted, &decryptedCardData); err != nil {
+		logrus.WithError(err).Error("error unmarshalling decrypted card data")
+		return models.CardData{}, err
+	}
+	decryptedCardData.DataType = data.DataType
+	decryptedCardData.Info = data.Info
+	return decryptedCardData, nil
 }
 
 func (d *ServiceData) GetDecodedTextData(ctx context.Context, userID uuid.UUID, metadataID int) (models.TextData, error) {
-	textData, err := d.repository.GetTextData(ctx, userID, metadataID)
+	var decryptedTextData models.TextData
+	data, err := d.repository.GetTextData(ctx, userID, metadataID)
 	if err != nil {
 		return models.TextData{}, err
 	}
-	//TODO тут будет происходить расшифровка данных
-	var decodedTextData = models.TextData{
-		Content: textData.Content,
-		Info:    textData.Info,
+	encryptedKey, err := d.repository.GetEncryptedKey(ctx, userID)
+	if err != nil {
+		return models.TextData{}, err
 	}
-	return decodedTextData, nil
+	decryptedKey, err := secure.DecryptAESKey(d.privateKey, encryptedKey)
+	if err != nil {
+		return models.TextData{}, err
+	}
+	decrypted, err := secure.DecryptDataAES(decryptedKey, data.EncryptedData)
+	if err != nil {
+		return models.TextData{}, err
+	}
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	if err = json.Unmarshal(decrypted, &decryptedTextData); err != nil {
+		logrus.WithError(err).Error("error unmarshalling decrypted text data")
+		return models.TextData{}, err
+	}
+	decryptedTextData.DataType = data.DataType
+	decryptedTextData.Info = data.Info
+	return decryptedTextData, nil
 }
 func (d *ServiceData) GetDecodedBinaryData(ctx context.Context, userID uuid.UUID, metadataID int) (models.BinaryData, error) {
 	binaryData, err := d.repository.GetBinaryData(ctx, userID, metadataID)
 	if err != nil {
 		return models.BinaryData{}, err
 	}
-	decodedData, err := d.s3Repository.GetBinaryData(ctx, binaryData.ObjectName)
-	//TODO тут будет происходить расшифровка данных
-	var decodedBinaryData = models.BinaryData{
-		Content:    decodedData,
-		ObjectName: binaryData.ObjectName,
-		Info:       binaryData.Info,
+	data, err := d.s3Repository.GetBinaryData(ctx, binaryData.ObjectName)
+	if err != nil {
+		return models.BinaryData{}, err
 	}
-	return decodedBinaryData, err
+	encryptedKey, err := d.repository.GetEncryptedKey(ctx, userID)
+	if err != nil {
+		return models.BinaryData{}, err
+	}
+	decryptedKey, err := secure.DecryptAESKey(d.privateKey, encryptedKey)
+	if err != nil {
+		return models.BinaryData{}, err
+	}
+	decrypted, err := secure.DecryptDataAES(decryptedKey, data)
+	if err != nil {
+		return models.BinaryData{}, err
+	}
+	var decryptedBinaryData = models.BinaryData{
+		DataType: binaryData.DataType,
+		Content:  decrypted,
+		Info:     binaryData.Info,
+	}
+	return decryptedBinaryData, nil
 }

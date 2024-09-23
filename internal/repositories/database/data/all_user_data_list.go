@@ -9,9 +9,10 @@ import (
 
 func (d *RepositoryData) GetAllUserDataList(ctx context.Context, userID uuid.UUID) ([]models.Metadata, error) {
 	const sqlQuery = `SELECT
-    				  		metadata.id AS metadata_id,
+    				  		metadata.id,
     						metadata.data_type,
-    						COALESCE(metadata.website, metadata.bank, metadata.text_data_description, metadata.binary_data_description) AS metadata_description
+    						COALESCE(metadata.website, metadata.bank, metadata.text_data_description, metadata.binary_data_description) AS metadata_description,
+    						metadata.created_at
 					FROM
     						data_units
 					JOIN
@@ -34,7 +35,7 @@ func (d *RepositoryData) GetAllUserDataList(ctx context.Context, userID uuid.UUI
 	var result []models.Metadata
 	for rows.Next() {
 		var metadata models.Metadata
-		if err = rows.Scan(&metadata.ID, &metadata.DataType, &metadata.Description); err != nil {
+		if err = rows.Scan(&metadata.ID, &metadata.DataType, &metadata.Description, &metadata.CreatedAt); err != nil {
 			logrus.WithError(err).Error("Metadata could not be retrieved")
 			return nil, err
 		}
